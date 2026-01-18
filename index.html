@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Super Bros Ultra - Sync Edition</title>
+    <title>Super Bros Ultra - Chat Edition</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
@@ -46,6 +46,31 @@
             color: white; text-shadow: 2px 2px 0 #000; z-index: 10; font-size: 14px;
         }
 
+        /* CHAT MULTIPLAYER (NOVO) */
+        #chat-ui {
+            position: absolute; bottom: 20px; left: 20px;
+            width: 300px; height: 200px;
+            display: flex; flex-direction: column;
+            z-index: 100;
+            pointer-events: auto; /* Permite clicar */
+        }
+        #chat-messages {
+            flex-grow: 1; overflow-y: auto;
+            background: rgba(0,0,0,0.5);
+            color: white; font-size: 10px; padding: 5px;
+            margin-bottom: 5px; border: 2px solid white;
+            text-shadow: 1px 1px 0 #000;
+            scrollbar-width: none;
+        }
+        #chat-input {
+            background: rgba(0,0,0,0.7); border: 2px solid white;
+            color: white; font-family: inherit; font-size: 10px;
+            padding: 5px; outline: none;
+        }
+        .chat-msg { margin-bottom: 4px; }
+        .chat-p1 { color: #ff5555; }
+        .chat-p2 { color: #55ff55; }
+
         .hint-box {
             position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); color: #fff; padding: 15px 25px;
@@ -54,7 +79,7 @@
         }
         .hint-box.visible { opacity: 1; }
 
-        /* CONTROLES VIRTUAIS (TOUCH) */
+        /* CONTROLES VIRTUAIS */
         #btn-fire {
             position: absolute; bottom: 60px; right: 40px;
             width: 70px; height: 70px; background: rgba(255, 60, 0, 0.7);
@@ -68,8 +93,27 @@
 
         .hidden { display: none !important; }
 
-        /* ESTILOS GERAIS DE MENU */
-        h1 { color: #ff3333; text-shadow: 5px 5px 0 #000; font-size: 3.5vw; margin-bottom: 30px; text-align: center; }
+        /* ESTILOS DE MENU E O CHAPÉU (NOVO) */
+        h1 { 
+            color: #ff3333; text-shadow: 5px 5px 0 #000; 
+            font-size: 3.5vw; margin-bottom: 30px; text-align: center; 
+            position: relative;
+        }
+
+        /* PIXEL ART HAT (CSS PURO) */
+        .hat-decoration {
+            position: absolute;
+            top: -45px; /* Posição acima do ULTRA */
+            right: 10px; /* Ajuste horizontal */
+            width: 5px; height: 5px; /* Tamanho do pixel */
+            background: transparent;
+            /* Box Shadow desenha o chapéu pixel por pixel */
+            box-shadow: 
+                15px 0 #ff0000, 20px 0 #ff0000, 25px 0 #ff0000, 30px 0 #ff0000, 35px 0 #ff0000,
+                10px 5px #ff0000, 15px 5px #ff0000, 20px 5px #ff0000, 25px 5px #ff0000, 30px 5px #ff0000, 35px 5px #ff0000, 40px 5px #ff0000,
+                10px 10px #ff0000, 15px 10px #ff0000, 20px 10px #ff0000, 25px 10px #ff0000, 30px 10px #ff0000, 35px 10px #ff0000, 40px 10px #ff0000, 45px 10px #ff0000,
+                5px 15px #ff0000, 10px 15px #ff0000, 15px 15px #ff0000, 20px 15px #ff0000, 25px 15px #ff0000, 30px 15px #ff0000, 35px 15px #ff0000, 40px 15px #ff0000, 45px 15px #ff0000, 50px 15px #ff0000;
+        }
         
         button.menu-btn {
             font-family: inherit; background: transparent; color: white;
@@ -78,17 +122,15 @@
         }
         button.menu-btn:hover { background: #ff3333; transform: scale(1.05); border-color: #ff3333; color: #fff; }
         
-        input { padding: 15px; font-family: inherit; text-align: center; margin-bottom: 15px; width: 300px; font-size: 14px; background: #fff; border: none; }
+        input.menu-input { padding: 15px; font-family: inherit; text-align: center; margin-bottom: 15px; width: 300px; font-size: 14px; background: #fff; border: none; }
         
         /* TELA DE RESULTADO */
         .result-screen { background: rgba(0,0,0,0.95); color: #fff; text-align: center; }
         .result-title { font-size: 30px; color: #ffcc00; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
         .waiting-text { animation: blink 1.5s infinite; color: #aaa; font-size: 12px; margin-top: 10px; }
 
-        /* MENU DE CONTROLES NOVO */
-        #menu-controls {
-            align-items: center;
-        }
+        /* MENU DE CONTROLES */
+        #menu-controls { align-items: center; }
         .controls-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
             background: rgba(0,0,0,0.8); padding: 30px; border: 2px solid white;
@@ -112,6 +154,13 @@
     </div>
     <div id="lives-hud" class="hidden lives-box">LIVES: <span id="lives-val">5</span></div>
 
+    <div id="chat-ui" class="hidden">
+        <div id="chat-messages">
+            <div class="chat-msg" style="color:#aaa">Chat do Sistema P2P Pronto.</div>
+        </div>
+        <input type="text" id="chat-input" placeholder="Digite e Enter..." onkeydown="Chat.handleInput(event)">
+    </div>
+
     <div id="btn-fire" class="hidden" onmousedown="Game.fireAction()" ontouchstart="Game.fireAction()">FIRE</div>
 
     <div id="yoshi-hint" class="hint-box">APERTE 'E' PARA SAIR DO YOSHI</div>
@@ -125,7 +174,9 @@
     </div>
 
     <div id="menu-main" class="ui-layer">
-        <h1>SUPER BROS ULTRA</h1>
+        <h1>
+            SUPER BROS ULTRA
+            <div class="hat-decoration"></div> </h1>
         <button class="menu-btn" onclick="Game.start('single')">1 PLAYER</button>
         <button class="menu-btn" onclick="Menu.showMulti()">2 PLAYERS (P2P)</button>
         <button class="menu-btn" onclick="Menu.showControls()">CONTROLES</button>
@@ -141,6 +192,7 @@
             <div class="key-row"><span class="key-box">ESPAÇO</span> <span>PULAR (NO AR = PULO DUPLO)</span></div>
             <div class="key-row"><span class="key-box">SHIFT</span> <span>CORRER / ATIRAR FOGO</span></div>
             <div class="key-row"><span class="key-box">E</span> <span>DESCER DO YOSHI</span></div>
+            <div class="key-row"><span class="key-box">ENTER</span> <span>ENVIAR CHAT</span></div>
         </div>
         <button class="menu-btn" onclick="Menu.hideControls()">VOLTAR</button>
     </div>
@@ -152,14 +204,14 @@
         <div id="p2p-ready" class="hidden" style="text-align: center;">
             <p style="font-size:10px; color:#ccc; margin-bottom:5px;">SEU ID (HOST):</p>
             <div style="display:flex; justify-content:center; align-items:center;">
-                <input type="text" id="my-id" readonly onclick="this.select()">
+                <input type="text" id="my-id" class="menu-input" readonly onclick="this.select()">
                 <button class="menu-btn" style="width:auto; padding:12px; font-size:10px; margin-left:10px;" onclick="Menu.copyId()">COPIAR</button>
             </div>
             
             <div style="margin: 25px 0; border-top:1px dashed #555; width:100%"></div>
 
             <p style="font-size:10px; color:#ccc; margin-bottom:5px;">ID DO AMIGO (CLIENT):</p>
-            <input type="text" id="friend-id" placeholder="Cole o ID do amigo aqui">
+            <input type="text" id="friend-id" class="menu-input" placeholder="Cole o ID do amigo aqui">
             <br>
             <button class="menu-btn" onclick="Network.connect()" style="background:#00aa00; border-color:#00aa00">ENTRAR NO JOGO</button>
         </div>
@@ -236,7 +288,7 @@ class Entity {
         this.x = x; this.y = y; this.w = w; this.h = h;
         this.vx = 0; this.vy = 0;
         this.dead = false; this.grounded = false;
-        this.id = id; // ID para sincronização Multiplayer
+        this.id = id; 
     }
     
     resolve(game) {
@@ -288,13 +340,17 @@ class Player extends Entity {
     update(keys, game) {
         if(this.isRemote || this.hasFinished) return;
 
+        // Se estiver focado no chat, não move
+        if(document.activeElement === document.getElementById('chat-input')) {
+            this.vx = 0; return;
+        }
+
         const acc = this.riding ? 0.8 : CFG.ACCEL;
         if(keys.a) { this.vx -= acc; this.facing = -1; }
         else if(keys.d) { this.vx += acc; this.facing = 1; }
         else this.vx *= CFG.FRIC;
         this.vx = Math.max(Math.min(this.vx, CFG.MAX_SPD), -CFG.MAX_SPD);
 
-        // --- DOUBLE JUMP LOGIC ---
         const jumpPressed = keys.w || keys.space;
         if (this.grounded) {
             this.canDoubleJump = true; 
@@ -318,7 +374,6 @@ class Player extends Entity {
             this.riding = false; this.y -= 10;
             const yoshi = new Item(this.x + 50 * this.facing, this.y, 'yoshi');
             game.entities.push(yoshi);
-            // Sincronizar spawn do item
             if(game.mode === 'multi') game.syncSpawn(yoshi);
         }
 
@@ -359,13 +414,11 @@ class Player extends Entity {
         const idx = ty*game.mapW+tx;
         const t = game.map[idx];
         if(t === 3) { 
-            // Bloco ?
-            game.updateMap(idx, 99); // Atualiza e Sincroniza
+            game.updateMap(idx, 99); 
             this.spawnLoot(game, tx, ty);
             this.score += 200;
         } else if (t === 2 && (this.mode !== 'small' || this.riding)) {
-            // Tijolo
-            game.updateMap(idx, 0); // Atualiza e Sincroniza
+            game.updateMap(idx, 0); 
             this.score += 50;
         }
     }
@@ -384,14 +437,14 @@ class Player extends Entity {
 
     handleEnt(e, game) {
         if (e instanceof Item) {
-            game.killEntity(e.id); // Sincroniza que pegou o item
+            game.killEntity(e.id);
             this.score += 1000;
             if(e.type === 'yoshi') this.riding = true;
             else if(e.type === 'mushroom' && this.mode === 'small') { this.mode = 'big'; this.y -= 10; this.h = 40; }
             else if(e.type === 'flower') { this.mode = 'fire'; this.h = 40; }
         } else if (e instanceof Goomba) {
             if(this.vy > 0 && this.y + this.h < e.y + e.h/2) { 
-                game.killEntity(e.id); // Sincroniza Morte
+                game.killEntity(e.id);
                 this.vy = -8; this.score += 100; 
                 this.canDoubleJump = true; 
             } 
@@ -466,7 +519,7 @@ class Fireball extends Entity {
         if(c) { if(this.vy > 0) this.vy = -6; else this.dead = true; }
         game.entities.forEach(e => {
             if(e instanceof Goomba && this.overlap(e)) { 
-                game.killEntity(e.id); // Sincroniza
+                game.killEntity(e.id);
                 this.dead = true; Game.ins.localPlayer.score += 50; 
             }
         });
@@ -502,7 +555,7 @@ class Engine {
         this.frame = 0;
         this.time = 400; 
         this.gameState = 'play'; 
-        this.nextEntId = 1000; // IDs para itens dinâmicos
+        this.nextEntId = 1000; 
 
         this.setup();
         this.loop = this.loop.bind(this);
@@ -555,25 +608,22 @@ class Engine {
 
     fireAction() { if(this.localPlayer.mode === 'fire') this.localPlayer.shootFireball(this); }
 
-    // --- LÓGICA DE SINCRONIZAÇÃO DE MUNDO ---
-    
     updateMap(idx, val) {
-        this.map[idx] = val; // Atualiza Local
+        this.map[idx] = val; 
         if (this.mode === 'multi' && this.conn && this.conn.open) {
-            this.conn.send({ type: 'map', idx: idx, val: val }); // Manda pro outro
+            this.conn.send({ type: 'map', idx: idx, val: val }); 
         }
     }
 
     killEntity(id) {
         const ent = this.entities.find(e => e.id === id);
-        if (ent) ent.dead = true; // Mata Local
+        if (ent) ent.dead = true; 
         if (this.mode === 'multi' && this.conn && this.conn.open) {
-            this.conn.send({ type: 'kill', id: id }); // Manda pro outro
+            this.conn.send({ type: 'kill', id: id }); 
         }
     }
 
     syncSpawn(ent) {
-        // Gera ID se não tiver
         if(!ent.id) ent.id = this.nextEntId++;
         if (this.conn && this.conn.open) {
             this.conn.send({ type: 'spawn', x: ent.x, y: ent.y, k: ent.type, id: ent.id });
@@ -599,7 +649,6 @@ class Engine {
             rect(p[0], FLOOR-p[1], 2, p[1], 5); rect(p[0], FLOOR-p[1], 2, 1, 4);
         });
 
-        // INIMIGOS (COM ID SEQUENCIAL PARA SYNC)
         let eId = 0;
         const addG = (x) => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE, eId++));
 
@@ -627,6 +676,7 @@ class Engine {
         for(let i=0; i<8; i++) rect(endX+i, FLOOR-1-i, 1, 1+i, 99); 
         rect(endX+9, FLOOR-1, 1, 1, 99); 
 
+        // MASTRO DA BANDEIRA (FINAL)
         const flagX = endX + 16;
         this.entities.push(new Flagpole(flagX*CFG.TILE, (FLOOR-10)*CFG.TILE));
         
@@ -661,7 +711,6 @@ class Engine {
         this.cameraX += (targetX - this.cameraX) * 0.1;
 
         if (this.mode === 'multi' && this.conn && this.conn.open) {
-            // MANDA ESTADO DO PLAYER
             this.conn.send({
                 type: 'player',
                 x: this.localPlayer.x, y: this.localPlayer.y,
@@ -773,9 +822,37 @@ class Engine {
 
 /**
  * ==========================================
- * 4. REDE E MENU
+ * 4. REDE, CHAT E MENU
  * ==========================================
  */
+
+const Chat = {
+    handleInput: (e) => {
+        e.stopPropagation(); // Impede andar com WASD
+        if(e.key === 'Enter') {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(msg && Network.conn && Network.conn.open) {
+                // Envia
+                Network.conn.send({ type: 'chat', msg: msg });
+                Chat.addMsg(msg, 'p1');
+            }
+            input.value = '';
+            // Tira foco para voltar a andar
+            document.getElementById('game-container').focus();
+            input.blur();
+        }
+    },
+    addMsg: (txt, origin) => {
+        const box = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg ' + (origin === 'p1' ? 'chat-p1' : 'chat-p2');
+        div.innerText = (origin === 'p1' ? 'Eu: ' : 'Amigo: ') + txt;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+};
+
 const Network = {
     peer: null, conn: null,
     init: () => {
@@ -798,25 +875,22 @@ const Network = {
         c.on('data', d => {
             if(!Game.ins) return;
 
-            // ROTEAMENTO DE PACOTES
             if (d.type === 'player') {
-                // Atualiza Boneco Remoto
                 if(Game.ins.remotePlayer) {
                     const p = Game.ins.remotePlayer;
                     p.x=d.x; p.y=d.y; p.facing=d.f; p.animState=d.s; p.riding=d.r; p.mode=d.m;
                     p.lives=d.lives; p.hasFinished=d.finished;
                 }
             } else if (d.type === 'map') {
-                // Atualiza Mapa (Bloco quebrado/usado)
                 Game.ins.map[d.idx] = d.val;
             } else if (d.type === 'kill') {
-                // Mata Inimigo
                 const ent = Game.ins.entities.find(e => e.id === d.id);
                 if(ent) ent.dead = true;
             } else if (d.type === 'spawn') {
-                // Spawna Item
                 const it = new Item(d.x, d.y, d.k, d.id);
                 Game.ins.entities.push(it);
+            } else if (d.type === 'chat') {
+                Chat.addMsg(d.msg, 'p2');
             }
         });
     }
@@ -849,6 +923,9 @@ const Game = {
         document.querySelectorAll('.ui-layer').forEach(e => e.classList.add('hidden'));
         document.getElementById('hud').classList.remove('hidden');
         document.getElementById('lives-hud').classList.remove('hidden');
+        
+        if(m === 'multi') document.getElementById('chat-ui').classList.remove('hidden');
+
         Game.ins = new Engine(m, r, c);
         if(c) c.on('data', d => {
             if(!Game.ins) return;
@@ -866,6 +943,8 @@ const Game = {
             } else if (d.type === 'spawn') {
                 const it = new Item(d.x, d.y, d.k, d.id);
                 Game.ins.entities.push(it);
+            } else if (d.type === 'chat') {
+                Chat.addMsg(d.msg, 'p2');
             }
         });
     },
