@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Super Bros Ultra - Double Jump Edition</title>
+    <title>Super Bros Ultra - Sync Edition</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
@@ -13,7 +13,7 @@
             -webkit-user-select: none;
         }
 
-        /* CONTAINER DO JOGO (TELA CHEIA) */
+        /* CONTAINER DO JOGO */
         #game-container {
             position: relative;
             width: 100vw; height: 100vh;
@@ -26,13 +26,14 @@
             display: block; 
         }
 
-        /* UI */
+        /* UI LAYER */
         .ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             background: rgba(0,0,0,0.92); z-index: 50;
         }
         
+        /* HUD */
         .hud {
             position: absolute; top: 20px; left: 20px; width: calc(100% - 40px);
             display: flex; justify-content: space-between;
@@ -53,7 +54,7 @@
         }
         .hint-box.visible { opacity: 1; }
 
-        /* CONTROLES VIRTUAIS */
+        /* CONTROLES VIRTUAIS (TOUCH) */
         #btn-fire {
             position: absolute; bottom: 60px; right: 40px;
             width: 70px; height: 70px; background: rgba(255, 60, 0, 0.7);
@@ -67,8 +68,8 @@
 
         .hidden { display: none !important; }
 
-        /* MENUS */
-        h1 { color: #ff3333; text-shadow: 5px 5px 0 #000; font-size: 3.5vw; margin-bottom: 40px; text-align: center; }
+        /* ESTILOS GERAIS DE MENU */
+        h1 { color: #ff3333; text-shadow: 5px 5px 0 #000; font-size: 3.5vw; margin-bottom: 30px; text-align: center; }
         
         button.menu-btn {
             font-family: inherit; background: transparent; color: white;
@@ -83,6 +84,18 @@
         .result-screen { background: rgba(0,0,0,0.95); color: #fff; text-align: center; }
         .result-title { font-size: 30px; color: #ffcc00; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
         .waiting-text { animation: blink 1.5s infinite; color: #aaa; font-size: 12px; margin-top: 10px; }
+
+        /* MENU DE CONTROLES NOVO */
+        #menu-controls {
+            align-items: center;
+        }
+        .controls-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            background: rgba(0,0,0,0.8); padding: 30px; border: 2px solid white;
+            margin-bottom: 20px; text-align: left;
+        }
+        .key-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #ddd; }
+        .key-box { background: #333; border: 2px solid #aaa; padding: 5px 10px; color: #fff; font-weight: bold; margin-right: 15px; }
 
         @keyframes blink { 0% {opacity:1;} 50% {opacity:0.3;} 100% {opacity:1;} }
     </style>
@@ -106,7 +119,7 @@
     <div id="screen-result" class="ui-layer hidden result-screen">
         <div id="result-msg" class="result-title">COURSE CLEAR!</div>
         <p id="result-sub">OBRIGADO POR JOGAR!</p>
-        <div id="wait-msg" class="waiting-text hidden">AGUARDANDO O JOGADOR 2 CHEGAR AO CASTELO...</div>
+        <div id="wait-msg" class="waiting-text hidden">AGUARDANDO O JOGADOR 2...</div>
         <br>
         <button id="btn-restart" class="menu-btn" onclick="location.reload()">JOGAR NOVAMENTE</button>
     </div>
@@ -115,15 +128,26 @@
         <h1>SUPER BROS ULTRA</h1>
         <button class="menu-btn" onclick="Game.start('single')">1 PLAYER</button>
         <button class="menu-btn" onclick="Menu.showMulti()">2 PLAYERS (P2P)</button>
-        <div style="margin-top:30px; color:#aaa; font-size: 10px; text-align: center; line-height: 1.8;">
-            [WASD / SETAS] MOVER  &nbsp;&nbsp; [ESPAÇO] PULAR (2x PULO DUPLO)<br>
-            [SHIFT] CORRER / FOGO &nbsp;&nbsp; [E] DESCER DO YOSHI
+        <button class="menu-btn" onclick="Menu.showControls()">CONTROLES</button>
+    </div>
+
+    <div id="menu-controls-screen" class="ui-layer hidden">
+        <h2 style="color:#ffcc00; margin-bottom:20px;">CONTROLES</h2>
+        <div class="controls-grid">
+            <div class="key-row"><span class="key-box">W / SETA CIMA</span> <span>PULAR / SUBIR</span></div>
+            <div class="key-row"><span class="key-box">A / SETA ESQ</span> <span>MOVER ESQUERDA</span></div>
+            <div class="key-row"><span class="key-box">S / SETA BAIXO</span> <span>AGACHAR / DESCER</span></div>
+            <div class="key-row"><span class="key-box">D / SETA DIR</span> <span>MOVER DIREITA</span></div>
+            <div class="key-row"><span class="key-box">ESPAÇO</span> <span>PULAR (NO AR = PULO DUPLO)</span></div>
+            <div class="key-row"><span class="key-box">SHIFT</span> <span>CORRER / ATIRAR FOGO</span></div>
+            <div class="key-row"><span class="key-box">E</span> <span>DESCER DO YOSHI</span></div>
         </div>
+        <button class="menu-btn" onclick="Menu.hideControls()">VOLTAR</button>
     </div>
 
     <div id="menu-multi" class="ui-layer hidden">
         <h2 style="color:#ffcc00; margin-bottom: 20px;">MULTIPLAYER P2P</h2>
-        <div id="p2p-loading">Conectando ao servidor global...</div>
+        <div id="p2p-loading">Conectando ao servidor...</div>
         
         <div id="p2p-ready" class="hidden" style="text-align: center;">
             <p style="font-size:10px; color:#ccc; margin-bottom:5px;">SEU ID (HOST):</p>
@@ -146,21 +170,16 @@
 <script>
 /**
  * ==========================================
- * 1. ASSETS & CONFIGURAÇÃO
+ * 1. ASSETS
  * ==========================================
  */
 const PALETTE = {
     _: 'rgba(0,0,0,0)', 
-    r: '#d22020', R: '#8b0000', // Vermelhos
-    s: '#ffcc99', // Pele
-    b: '#4e2e15', B: '#000000', // Marrons e Preto
-    o: '#2244cc', O: '#112288', // Azuis
-    g: '#00aa00', G: '#006600', // Verdes
-    y: '#ffcc00', Y: '#cdaa00', // Amarelos
-    w: '#ffffff', // Branco
-    e: '#ffaaaa', // Língua Yoshi
-    k: '#ffbca5', K: '#d66b46', // Tijolo
-    c: '#a0a0a0', C: '#606060', d: '#400000', D: '#200000' // Castelo
+    r: '#d22020', R: '#8b0000', s: '#ffcc99', 
+    b: '#4e2e15', B: '#000000', o: '#2244cc', O: '#112288', 
+    g: '#00aa00', G: '#006600', y: '#ffcc00', Y: '#cdaa00', 
+    w: '#ffffff', e: '#ffaaaa', k: '#ffbca5', K: '#d66b46', 
+    c: '#a0a0a0', C: '#606060', d: '#400000'
 };
 
 const SPRITES = {
@@ -187,15 +206,12 @@ const AssetCache = {};
 function getSprite(name, modifier = null) {
     const key = name + (modifier || '');
     if (AssetCache[key]) return AssetCache[key];
-
     const data = SPRITES[name];
     if (!data) return document.createElement('canvas'); 
-
     const cvs = document.createElement('canvas');
     cvs.width = 32; cvs.height = 32;
     const ctx = cvs.getContext('2d');
     const ps = 2; 
-
     data.forEach((row, y) => {
         for (let x = 0; x < row.length; x++) {
             let char = row[x];
@@ -211,15 +227,16 @@ function getSprite(name, modifier = null) {
 
 /**
  * ==========================================
- * 2. CLASSES DE ENTIDADES
+ * 2. ENTIDADES
  * ==========================================
  */
 
 class Entity {
-    constructor(x, y, w, h) {
+    constructor(x, y, w, h, id = -1) {
         this.x = x; this.y = y; this.w = w; this.h = h;
         this.vx = 0; this.vy = 0;
         this.dead = false; this.grounded = false;
+        this.id = id; // ID para sincronização Multiplayer
     }
     
     resolve(game) {
@@ -264,8 +281,6 @@ class Player extends Entity {
         this.isRemote = false;
         this.hasFinished = false;
         this.invul = false;
-        
-        // DOUBLE JUMP SYSTEM VARS
         this.canDoubleJump = false;
         this.jumpHeld = false;
     }
@@ -279,31 +294,23 @@ class Player extends Entity {
         else this.vx *= CFG.FRIC;
         this.vx = Math.max(Math.min(this.vx, CFG.MAX_SPD), -CFG.MAX_SPD);
 
-        // --- SISTEMA DE PULO DUPLO ---
+        // --- DOUBLE JUMP LOGIC ---
         const jumpPressed = keys.w || keys.space;
-
         if (this.grounded) {
-            this.canDoubleJump = true; // Reseta pulo duplo ao tocar o chão
+            this.canDoubleJump = true; 
             if (jumpPressed && !this.jumpHeld) {
                 this.vy = this.riding ? CFG.JUMP - 3 : CFG.JUMP;
                 this.grounded = false;
                 this.jumpHeld = true;
             }
         } else {
-            // No ar
             if (jumpPressed && !this.jumpHeld && this.canDoubleJump) {
-                // Pulo Duplo!
-                this.vy = (this.riding ? CFG.JUMP - 3 : CFG.JUMP) * 0.9; // Um pouco menor que o full jump
-                this.canDoubleJump = false; // Gasta o pulo
+                this.vy = (this.riding ? CFG.JUMP - 3 : CFG.JUMP) * 0.9; 
+                this.canDoubleJump = false; 
                 this.jumpHeld = true;
             }
         }
-
-        // Reseta trava da tecla
-        if (!jumpPressed) {
-            this.jumpHeld = false;
-        }
-        // -----------------------------
+        if (!jumpPressed) this.jumpHeld = false;
 
         if(keys.shift && this.mode === 'fire' && !this.riding) this.shootFireball(game);
 
@@ -311,6 +318,8 @@ class Player extends Entity {
             this.riding = false; this.y -= 10;
             const yoshi = new Item(this.x + 50 * this.facing, this.y, 'yoshi');
             game.entities.push(yoshi);
+            // Sincronizar spawn do item
+            if(game.mode === 'multi') game.syncSpawn(yoshi);
         }
 
         this.vy += CFG.GRAV;
@@ -328,7 +337,8 @@ class Player extends Entity {
     shootFireball(game) {
         const now = Date.now();
         if(now - this.lastShot > 400) {
-            game.entities.push(new Fireball(this.x + (this.facing*20), this.y, this.facing));
+            const fb = new Fireball(this.x + (this.facing*20), this.y, this.facing);
+            game.entities.push(fb);
             this.lastShot = now;
         }
     }
@@ -339,7 +349,7 @@ class Player extends Entity {
             this.x = 100; this.y = 300; this.vx = 0; this.vy = 0;
             this.mode = 'small'; this.riding = false;
             this.invul = true; setTimeout(() => this.invul = false, 3000); 
-            this.canDoubleJump = true; // Reseta pulo ao morrer
+            this.canDoubleJump = true; 
         } else {
             Game.ins.endGame(false);
         }
@@ -349,9 +359,14 @@ class Player extends Entity {
         const idx = ty*game.mapW+tx;
         const t = game.map[idx];
         if(t === 3) { 
-            game.map[idx] = 99; this.spawnLoot(game, tx, ty); this.score += 200;
+            // Bloco ?
+            game.updateMap(idx, 99); // Atualiza e Sincroniza
+            this.spawnLoot(game, tx, ty);
+            this.score += 200;
         } else if (t === 2 && (this.mode !== 'small' || this.riding)) {
-            game.map[idx] = 0; this.score += 50;
+            // Tijolo
+            game.updateMap(idx, 0); // Atualiza e Sincroniza
+            this.score += 50;
         }
     }
 
@@ -361,19 +376,24 @@ class Player extends Entity {
         if (rand < 0.2) type = 'yoshi'; 
         else if (this.mode === 'small') type = 'mushroom';
         else type = 'flower';
-        game.entities.push(new Item(tx*CFG.TILE, (ty-1)*CFG.TILE, type));
+        
+        const item = new Item(tx*CFG.TILE, (ty-1)*CFG.TILE, type);
+        game.entities.push(item);
+        if(game.mode === 'multi') game.syncSpawn(item);
     }
 
     handleEnt(e, game) {
         if (e instanceof Item) {
-            e.dead = true; this.score += 1000;
+            game.killEntity(e.id); // Sincroniza que pegou o item
+            this.score += 1000;
             if(e.type === 'yoshi') this.riding = true;
             else if(e.type === 'mushroom' && this.mode === 'small') { this.mode = 'big'; this.y -= 10; this.h = 40; }
             else if(e.type === 'flower') { this.mode = 'fire'; this.h = 40; }
         } else if (e instanceof Goomba) {
             if(this.vy > 0 && this.y + this.h < e.y + e.h/2) { 
-                e.dead = true; this.vy = -8; this.score += 100; 
-                this.canDoubleJump = true; // Pular no inimigo reseta o double jump (opcional, mas legal)
+                game.killEntity(e.id); // Sincroniza Morte
+                this.vy = -8; this.score += 100; 
+                this.canDoubleJump = true; 
             } 
             else if (!this.riding && !this.invul) {
                 if(this.mode === 'small') this.die();
@@ -413,7 +433,7 @@ class Player extends Entity {
 }
 
 class Goomba extends Entity {
-    constructor(x,y) { super(x,y,32,32); this.vx = -1.5; }
+    constructor(x,y, id) { super(x,y,32,32, id); this.vx = -1.5; }
     update(game) {
         this.vy += CFG.GRAV;
         this.resolve(game);
@@ -426,7 +446,7 @@ class Goomba extends Entity {
 }
 
 class Item extends Entity {
-    constructor(x, y, type) { super(x, y, 32, 32); this.type = type; this.vx = (type === 'mushroom') ? 2 : 0; this.vy = -5; }
+    constructor(x, y, type, id) { super(x, y, 32, 32, id); this.type = type; this.vx = (type === 'mushroom') ? 2 : 0; this.vy = -5; }
     update(game) {
         this.vy += CFG.GRAV; this.resolve(game);
         if(this.grounded && this.type === 'mushroom') this.vx = 2;
@@ -445,7 +465,10 @@ class Fireball extends Entity {
         const c = this.col(game);
         if(c) { if(this.vy > 0) this.vy = -6; else this.dead = true; }
         game.entities.forEach(e => {
-            if(e instanceof Goomba && this.overlap(e)) { e.dead = true; this.dead = true; Game.ins.localPlayer.score += 50; }
+            if(e instanceof Goomba && this.overlap(e)) { 
+                game.killEntity(e.id); // Sincroniza
+                this.dead = true; Game.ins.localPlayer.score += 50; 
+            }
         });
         if(this.y > game.canvas.height) this.dead = true;
     }
@@ -479,6 +502,7 @@ class Engine {
         this.frame = 0;
         this.time = 400; 
         this.gameState = 'play'; 
+        this.nextEntId = 1000; // IDs para itens dinâmicos
 
         this.setup();
         this.loop = this.loop.bind(this);
@@ -501,7 +525,6 @@ class Engine {
         this.mapH = 20;  
         this.cameraX = 0;
         this.entities = [];
-        this.particles = [];
         
         this.genLevel();
 
@@ -532,6 +555,31 @@ class Engine {
 
     fireAction() { if(this.localPlayer.mode === 'fire') this.localPlayer.shootFireball(this); }
 
+    // --- LÓGICA DE SINCRONIZAÇÃO DE MUNDO ---
+    
+    updateMap(idx, val) {
+        this.map[idx] = val; // Atualiza Local
+        if (this.mode === 'multi' && this.conn && this.conn.open) {
+            this.conn.send({ type: 'map', idx: idx, val: val }); // Manda pro outro
+        }
+    }
+
+    killEntity(id) {
+        const ent = this.entities.find(e => e.id === id);
+        if (ent) ent.dead = true; // Mata Local
+        if (this.mode === 'multi' && this.conn && this.conn.open) {
+            this.conn.send({ type: 'kill', id: id }); // Manda pro outro
+        }
+    }
+
+    syncSpawn(ent) {
+        // Gera ID se não tiver
+        if(!ent.id) ent.id = this.nextEntId++;
+        if (this.conn && this.conn.open) {
+            this.conn.send({ type: 'spawn', x: ent.x, y: ent.y, k: ent.type, id: ent.id });
+        }
+    }
+
     genLevel() {
         this.map = new Array(this.mapW * this.mapH).fill(0);
         const set = (x,y,t) => { if(x<this.mapW && y<this.mapH) this.map[y*this.mapW+x] = t; };
@@ -540,75 +588,50 @@ class Engine {
         const FLOOR = 15;
         rect(0, FLOOR, 300, 5, 1);
         
-        // --- OBSTÁCULOS E BURACOS ADICIONAIS ---
-        const pits = [69, 86, 110, 135, 153]; // Mais buracos (110, 135)
+        const pits = [69, 86, 110, 135, 153];
         pits.forEach(p => rect(p, FLOOR, 3, 5, 0));
 
-        // --- INÍCIO CLÁSSICO ---
-        set(16, FLOOR-4, 3); // ?
+        set(16, FLOOR-4, 3);
         rect(20, FLOOR-4, 5, 1, 2); 
         set(21, FLOOR-4, 3); set(22, FLOOR-8, 3);
 
-        // --- TUBOS (Adicionado mais um complexo) ---
         [[28,2], [38,3], [46,4], [57,4], [100, 5], [163,2], [179,2]].forEach(p => {
-            rect(p[0], FLOOR-p[1], 2, p[1], 5);
-            rect(p[0], FLOOR-p[1], 2, 1, 4);
+            rect(p[0], FLOOR-p[1], 2, p[1], 5); rect(p[0], FLOOR-p[1], 2, 1, 4);
         });
 
-        // --- ÁREA DE BLOCOS DENSOS E INIMIGOS ---
-        
-        // Horda 1: Chão plano
-        [22, 25, 40, 42].forEach(x => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE)));
+        // INIMIGOS (COM ID SEQUENCIAL PARA SYNC)
+        let eId = 0;
+        const addG = (x) => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE, eId++));
 
-        // Estrutura Alta (Escada de tijolos com Goombas)
-        rect(60, FLOOR-4, 3, 1, 2);
-        rect(65, FLOOR-6, 3, 1, 2);
-        this.entities.push(new Goomba(61*CFG.TILE, (FLOOR-5)*CFG.TILE));
-        this.entities.push(new Goomba(66*CFG.TILE, (FLOOR-7)*CFG.TILE));
+        [22, 25, 40, 42].forEach(addG);
 
-        // Área de ? Blocos (Drops extras)
+        rect(60, FLOOR-4, 3, 1, 2); rect(65, FLOOR-6, 3, 1, 2);
+        this.entities.push(new Goomba(61*CFG.TILE, (FLOOR-5)*CFG.TILE, eId++));
+        this.entities.push(new Goomba(66*CFG.TILE, (FLOOR-7)*CFG.TILE, eId++));
+
         rect(75, FLOOR-4, 1, 1, 2); set(76, FLOOR-4, 3); rect(77, FLOOR-4, 1, 1, 2);
-        
-        // Horda 2: Abaixo dos blocos
-        [80, 82, 84].forEach(x => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE)));
-        
-        // Blocos altos
-        rect(80, FLOOR-8, 8, 1, 2); 
-        rect(91, FLOOR-8, 3, 1, 2); set(94, FLOOR-8, 3);
+        [80, 82, 84].forEach(addG);
+        rect(80, FLOOR-8, 8, 1, 2); rect(91, FLOOR-8, 3, 1, 2); set(94, FLOOR-8, 3);
 
-        // --- ÁREA DIFÍCIL (ILHAS E BLOCOS AMARELOS) ---
-        // Ilha flutuante sobre buraco 110
         rect(108, FLOOR-5, 7, 1, 2);
-        set(111, FLOOR-9, 3); set(112, FLOOR-9, 3); set(113, FLOOR-9, 3); // Trinca de Itens
-        this.entities.push(new Goomba(110*CFG.TILE, (FLOOR-6)*CFG.TILE));
+        set(111, FLOOR-9, 3); set(112, FLOOR-9, 3); set(113, FLOOR-9, 3);
+        this.entities.push(new Goomba(110*CFG.TILE, (FLOOR-6)*CFG.TILE, eId++));
 
-        // Horda 3: Pós buraco grande
-        [120, 122, 125, 127, 130].forEach(x => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE)));
+        [120, 122, 125, 127, 130].forEach(addG);
 
-        // Ponte de blocos sobre buraco 135
-        rect(134, FLOOR-4, 1, 1, 2);
-        rect(136, FLOOR-4, 1, 1, 2);
-        set(135, FLOOR-7, 3); // Item arriscado
+        rect(134, FLOOR-4, 1, 1, 2); rect(136, FLOOR-4, 1, 1, 2); set(135, FLOOR-7, 3);
 
-        // Goombas finais antes da escada
-        [145, 147, 150, 158, 160].forEach(x => this.entities.push(new Goomba(x*CFG.TILE, (FLOOR-2)*CFG.TILE)));
+        [145, 147, 150, 158, 160].forEach(addG);
 
-        // ESCADARIA FINAL
         const endX = 190;
         for(let i=0; i<8; i++) rect(endX+i, FLOOR-1-i, 1, 1+i, 99); 
         rect(endX+9, FLOOR-1, 1, 1, 99); 
 
-        // BANDEIRA
         const flagX = endX + 16;
         this.entities.push(new Flagpole(flagX*CFG.TILE, (FLOOR-10)*CFG.TILE));
         
-        // CASTELO
-        const cX = flagX + 6;
-        const cY = FLOOR - 5;
-        rect(cX, cY, 5, 5, 6); 
-        rect(cX, cY-2, 5, 2, 7); 
-        set(cX+2, FLOOR-1, 8); 
-        set(cX+2, FLOOR-2, 8); 
+        const cX = flagX + 6; const cY = FLOOR - 5;
+        rect(cX, cY, 5, 5, 6); rect(cX, cY-2, 5, 2, 7); set(cX+2, FLOOR-1, 8); set(cX+2, FLOOR-2, 8); 
         
         rect(this.mapW-2, 0, 1, this.mapH, 99); 
     }
@@ -638,7 +661,9 @@ class Engine {
         this.cameraX += (targetX - this.cameraX) * 0.1;
 
         if (this.mode === 'multi' && this.conn && this.conn.open) {
+            // MANDA ESTADO DO PLAYER
             this.conn.send({
+                type: 'player',
                 x: this.localPlayer.x, y: this.localPlayer.y,
                 vx: this.localPlayer.vx, vy: this.localPlayer.vy,
                 f: this.localPlayer.facing, s: this.localPlayer.animState,
@@ -771,10 +796,27 @@ const Network = {
         const c = Network.peer.connect(id);
         c.on('open', () => Game.start('multi', 'client', c));
         c.on('data', d => {
-            if(Game.ins && Game.ins.remotePlayer) {
-                const p = Game.ins.remotePlayer;
-                p.x=d.x; p.y=d.y; p.facing=d.f; p.animState=d.s; p.riding=d.r; p.mode=d.m;
-                p.lives=d.lives; p.hasFinished=d.finished;
+            if(!Game.ins) return;
+
+            // ROTEAMENTO DE PACOTES
+            if (d.type === 'player') {
+                // Atualiza Boneco Remoto
+                if(Game.ins.remotePlayer) {
+                    const p = Game.ins.remotePlayer;
+                    p.x=d.x; p.y=d.y; p.facing=d.f; p.animState=d.s; p.riding=d.r; p.mode=d.m;
+                    p.lives=d.lives; p.hasFinished=d.finished;
+                }
+            } else if (d.type === 'map') {
+                // Atualiza Mapa (Bloco quebrado/usado)
+                Game.ins.map[d.idx] = d.val;
+            } else if (d.type === 'kill') {
+                // Mata Inimigo
+                const ent = Game.ins.entities.find(e => e.id === d.id);
+                if(ent) ent.dead = true;
+            } else if (d.type === 'spawn') {
+                // Spawna Item
+                const it = new Item(d.x, d.y, d.k, d.id);
+                Game.ins.entities.push(it);
             }
         });
     }
@@ -785,6 +827,14 @@ const Menu = {
         document.getElementById('menu-main').classList.add('hidden');
         document.getElementById('menu-multi').classList.remove('hidden');
         Network.init();
+    },
+    showControls: () => {
+        document.getElementById('menu-main').classList.add('hidden');
+        document.getElementById('menu-controls-screen').classList.remove('hidden');
+    },
+    hideControls: () => {
+        document.getElementById('menu-controls-screen').classList.add('hidden');
+        document.getElementById('menu-main').classList.remove('hidden');
     },
     copyId: () => {
         const id = document.getElementById('my-id');
@@ -801,10 +851,21 @@ const Game = {
         document.getElementById('lives-hud').classList.remove('hidden');
         Game.ins = new Engine(m, r, c);
         if(c) c.on('data', d => {
-            if(Game.ins.remotePlayer) {
-                const p = Game.ins.remotePlayer;
-                p.x=d.x; p.y=d.y; p.facing=d.f; p.animState=d.s; p.riding=d.r; p.mode=d.m;
-                p.lives=d.lives; p.hasFinished=d.finished;
+            if(!Game.ins) return;
+            if (d.type === 'player') {
+                if(Game.ins.remotePlayer) {
+                    const p = Game.ins.remotePlayer;
+                    p.x=d.x; p.y=d.y; p.facing=d.f; p.animState=d.s; p.riding=d.r; p.mode=d.m;
+                    p.lives=d.lives; p.hasFinished=d.finished;
+                }
+            } else if (d.type === 'map') {
+                Game.ins.map[d.idx] = d.val;
+            } else if (d.type === 'kill') {
+                const ent = Game.ins.entities.find(e => e.id === d.id);
+                if(ent) ent.dead = true;
+            } else if (d.type === 'spawn') {
+                const it = new Item(d.x, d.y, d.k, d.id);
+                Game.ins.entities.push(it);
             }
         });
     },
